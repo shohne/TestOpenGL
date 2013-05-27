@@ -74,16 +74,66 @@ GLfloat gCubeVertexData[216] =
     -0.5f, 0.5f, -0.5f,        0.0f, 0.0f, -1.0f
 };
 
+
+GLfloat colors[144] = {
+    .4, .1, .8, .4,
+    .9, .2, .5, .4,
+    .5, .7, .9, .7,
+    .4, .1, .8, .4,
+    .9, .2, .5, .4,
+    .5, .7, .9, .7,
+    .4, .1, .8, .4,
+    .9, .2, .5, .4,
+    .5, .7, .9, .7,
+    .4, .1, .8, .4,
+    .9, .2, .5, .4,
+    .5, .7, .9, .7,
+    .4, .1, .8, .4,
+    .9, .2, .5, .4,
+    .5, .7, .9, .7,
+    .4, .1, .8, .4,
+    .9, .2, .5, .4,
+    .5, .7, .9, .7,
+    .4, .1, .8, .4,
+    .9, .2, .5, .4,
+    .5, .7, .9, .7,
+    .4, .1, .8, .4,
+    .9, .2, .5, .4,
+    .5, .7, .9, .7,
+    .4, .1, .8, .4,
+    .9, .2, .5, .4,
+    .5, .7, .9, .7,
+    .4, .1, .8, .4,
+    .9, .2, .5, .4,
+    .5, .7, .9, .7,
+    .4, .1, .8, .4,
+    .9, .2, .5, .4,
+    .5, .7, .9, .7,
+    .4, .1, .8, .4,
+    .9, .2, .5, .4,
+    .5, .7, .9, .7
+};
+
+
+
 @interface ViewController () {
     GLuint _program;
     
-    GLKMatrix4 _modelViewProjectionMatrix;
-    GLKMatrix3 _normalMatrix;
+    GLKMatrix4 _modelViewProjectionMatrix[10];
+    
+    
+    GLKMatrix3 _normalMatrix[10];
+    
+    int numeroCube;
+    
     float _rotation;
+    float _rotation2;
     
     GLuint _vertexArray;
     GLuint _vertexBuffer;
+    GLuint _colorBuffer;
 }
+
 @property (strong, nonatomic) EAGLContext *context;
 @property (strong, nonatomic) GLKBaseEffect *effect;
 
@@ -112,8 +162,75 @@ GLfloat gCubeVertexData[216] =
     view.context = self.context;
     view.drawableDepthFormat = GLKViewDrawableDepthFormat24;
     
+    /*
+    UISwipeGestureRecognizer *recognizerLeft = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(handleSwipeLeft:)];
+    recognizerLeft.direction = UISwipeGestureRecognizerDirectionLeft;
+    [self.view addGestureRecognizer:recognizerLeft];
+
+    UISwipeGestureRecognizer *recognizerRight = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(handleSwipeRight:)];
+    recognizerRight.direction = UISwipeGestureRecognizerDirectionRight;
+    [self.view addGestureRecognizer:recognizerRight];
+
+    UISwipeGestureRecognizer *recognizerUp = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(handleSwipeUp:)];
+    recognizerUp.direction = UISwipeGestureRecognizerDirectionUp;
+    [self.view addGestureRecognizer:recognizerUp];
+
+    UISwipeGestureRecognizer *recognizerDown = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(handleSwipeDown:)];
+    recognizerDown.direction = UISwipeGestureRecognizerDirectionDown;
+    [self.view addGestureRecognizer:recognizerDown];
+
+    UITapGestureRecognizer *recognizerTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)];
+    [self.view addGestureRecognizer:recognizerTap];
+     */
+    
+    
+    numeroCube = 1;
+
     [self setupGL];
 }
+
+- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event{
+}
+- (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event{
+    UITouch *touch = [touches anyObject];
+    CGPoint location = [touch locationInView:self.view];
+    CGPoint prevLocation = [touch previousLocationInView:self.view];
+//    NSLog(@"location = %@    prevLocation = %@", NSStringFromCGPoint(location), NSStringFromCGPoint(prevLocation));
+    _rotation  += ( (float)(location.y - prevLocation.y) ) / 200.0f;
+    _rotation2 += ( (float)(location.x - prevLocation.x) ) / 200.0f;
+    [self update];
+}
+
+- (void)handleTap:(UITapGestureRecognizer *)recognizer {
+    float DELTA = 0.02;
+    
+    CGPoint point = [recognizer locationInView:self.view];
+    NSLog(@"%@", NSStringFromCGPoint(point));
+    if (point.x < 100) _rotation -= DELTA;
+    if (point.x > 678) _rotation += DELTA;
+    [self update];
+}
+
+- (void)handleSwipeLeft:(UIGestureRecognizer *)recognizer {
+    NSLog(@"handleSwipeLeft");
+    _rotation += 0.1;
+    [self update];
+}
+
+- (void)handleSwipeRight:(UIGestureRecognizer *)recognizer {
+    NSLog(@"handleSwipeRight");
+    _rotation -= 0.1;
+    [self update];
+}
+
+- (void)handleSwipeUp:(UIGestureRecognizer *)recognizer {
+    NSLog(@"handleSwipeUp");
+}
+
+- (void)handleSwipeDown:(UIGestureRecognizer *)recognizer {
+    NSLog(@"handleSwipeDown");
+}
+
 
 - (void)dealloc
 {    
@@ -150,9 +267,15 @@ GLfloat gCubeVertexData[216] =
     
     self.effect = [[GLKBaseEffect alloc] init];
     self.effect.light0.enabled = GL_TRUE;
-    self.effect.light0.diffuseColor = GLKVector4Make(1.0f, 0.4f, 0.4f, 1.0f);
+//    self.effect.light0.diffuseColor = GLKVector4Make(1.0f, 1.0f, 1.0f, 1.0f);
+//    self.effect.light0.position = GLKVector4Make(0.0f, 1.0f, 1.0f, 10.0f);
     
-    glEnable(GL_DEPTH_TEST);
+//    self.effect.light0.ambientColor = GLKVector4Make(1.0f, 1.0f, 1.0f, 10.0f);
+//    self.effect.light0.specularColor = GLKVector4Make(1.0f, 1.0f, 1.0f, 1.0f);
+    
+//    glEnable(GL_DEPTH_TEST);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable( GL_BLEND );
     
     glGenVertexArraysOES(1, &_vertexArray);
     glBindVertexArrayOES(_vertexArray);
@@ -161,6 +284,12 @@ GLfloat gCubeVertexData[216] =
     glBindBuffer(GL_ARRAY_BUFFER, _vertexBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(gCubeVertexData), gCubeVertexData, GL_STATIC_DRAW);
     
+    /*
+    glGenBuffers(1, &_colorBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, _colorBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
+    */
+     
     glEnableVertexAttribArray(GLKVertexAttribPosition);
     glVertexAttribPointer(GLKVertexAttribPosition, 3, GL_FLOAT, GL_FALSE, 24, BUFFER_OFFSET(0));
     glEnableVertexAttribArray(GLKVertexAttribNormal);
@@ -189,51 +318,91 @@ GLfloat gCubeVertexData[216] =
 - (void)update
 {
     float aspect = fabsf(self.view.bounds.size.width / self.view.bounds.size.height);
-    GLKMatrix4 projectionMatrix = GLKMatrix4MakePerspective(GLKMathDegreesToRadians(65.0f), aspect, 0.1f, 100.0f);
+    GLKMatrix4 projectionMatrix = GLKMatrix4MakePerspective(GLKMathDegreesToRadians(15.0f), aspect, 0.1f, 100.0f);
     
     self.effect.transform.projectionMatrix = projectionMatrix;
     
-    GLKMatrix4 baseModelViewMatrix = GLKMatrix4MakeTranslation(0.0f, 0.0f, -4.0f);
-    baseModelViewMatrix = GLKMatrix4Rotate(baseModelViewMatrix, _rotation, 0.0f, 1.0f, 0.0f);
+    GLKMatrix4 baseModelViewMatrix = GLKMatrix4MakeTranslation(0.0f, 0.0f, -15.0f);
+  //  baseModelViewMatrix = GLKMatrix4Rotate(baseModelViewMatrix, _rotation, 0.0f, 1.0f, 0.0f);
     
     // Compute the model view matrix for the object rendered with GLKit
+    /*
     GLKMatrix4 modelViewMatrix = GLKMatrix4MakeTranslation(0.0f, 0.0f, -1.5f);
     modelViewMatrix = GLKMatrix4Rotate(modelViewMatrix, _rotation, 1.0f, 1.0f, 1.0f);
     modelViewMatrix = GLKMatrix4Multiply(baseModelViewMatrix, modelViewMatrix);
     
     self.effect.transform.modelviewMatrix = modelViewMatrix;
+     */
     
     // Compute the model view matrix for the object rendered with ES2
-    modelViewMatrix = GLKMatrix4MakeTranslation(0.0f, 0.0f, 1.5f);
-    modelViewMatrix = GLKMatrix4Rotate(modelViewMatrix, _rotation, 1.0f, 1.0f, 1.0f);
+    for (int i=0; i<numeroCube; i++)
+    {
+//        GLKMatrix4 modelViewMatrix = GLKMatrix4MakeTranslation(0.0f, 0.0f + 1.1 * i, 0.0f);
+        GLKMatrix4 modelViewMatrix = GLKMatrix4MakeTranslation(0.0f, 0.0f + 0.0f, 0.0f);
+        
+        modelViewMatrix = GLKMatrix4Rotate(modelViewMatrix, _rotation,  1.0f, 0.0f, 0.0f);
+        modelViewMatrix = GLKMatrix4Rotate(modelViewMatrix, _rotation2, 0.0f, 1.0f, 0.0f);
+        modelViewMatrix = GLKMatrix4TranslateWithVector3(modelViewMatrix, GLKVector3Make(0.0f , 0.0f, 1.5 * i));
+        modelViewMatrix = GLKMatrix4Multiply(baseModelViewMatrix, modelViewMatrix);
+    
+        _normalMatrix[i] = GLKMatrix3InvertAndTranspose(GLKMatrix4GetMatrix3(modelViewMatrix), NULL);
+    
+        _modelViewProjectionMatrix[i] = GLKMatrix4Multiply(projectionMatrix, modelViewMatrix);
+    }
+
+    // Compute the model view matrix for the object rendered with ES2 2
+    /*
+    modelViewMatrix = GLKMatrix4MakeTranslation(0.0f, 1.8f, 0.0f);
+    modelViewMatrix = GLKMatrix4Rotate(modelViewMatrix, _rotation, 1.0f, -1.0f, 1.0f);
     modelViewMatrix = GLKMatrix4Multiply(baseModelViewMatrix, modelViewMatrix);
     
     _normalMatrix = GLKMatrix3InvertAndTranspose(GLKMatrix4GetMatrix3(modelViewMatrix), NULL);
     
-    _modelViewProjectionMatrix = GLKMatrix4Multiply(projectionMatrix, modelViewMatrix);
-    
-    _rotation += self.timeSinceLastUpdate * 0.5f;
+    _modelViewProjectionMatrix2 = GLKMatrix4Multiply(projectionMatrix, modelViewMatrix);
+     */
+
+//    _rotation += self.timeSinceLastUpdate * 0.5f;
 }
 
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
 {
-    glClearColor(0.65f, 0.65f, 0.65f, 1.0f);
+    glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
+ 
     glBindVertexArrayOES(_vertexArray);
     
     // Render the object with GLKit
     [self.effect prepareToDraw];
     
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+ //   glDrawArrays(GL_TRIANGLES, 0, 36);
     
     // Render the object again with ES2
     glUseProgram(_program);
+
+    for (int i=0; i<numeroCube; i++)
+    {
+        glUniformMatrix4fv(uniforms[UNIFORM_MODELVIEWPROJECTION_MATRIX], 1, 0, _modelViewProjectionMatrix[i].m);
+        glUniformMatrix3fv(uniforms[UNIFORM_NORMAL_MATRIX], 1, 0, _normalMatrix[i].m);
     
-    glUniformMatrix4fv(uniforms[UNIFORM_MODELVIEWPROJECTION_MATRIX], 1, 0, _modelViewProjectionMatrix.m);
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_COLOR_ARRAY);
+        
+
+
+        
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        
+        glDisableClientState(GL_COLOR_ARRAY);
+        glDisableClientState(GL_VERTEX_ARRAY);
+
+    }
+    
+/*
+    glUniformMatrix4fv(uniforms[UNIFORM_MODELVIEWPROJECTION_MATRIX], 1, 0, _modelViewProjectionMatrix2.m);
     glUniformMatrix3fv(uniforms[UNIFORM_NORMAL_MATRIX], 1, 0, _normalMatrix.m);
     
     glDrawArrays(GL_TRIANGLES, 0, 36);
+ */
 }
 
 #pragma mark -  OpenGL ES 2 shader compilation
