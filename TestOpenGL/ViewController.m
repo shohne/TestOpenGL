@@ -27,6 +27,8 @@ enum
     NUM_ATTRIBUTES
 };
 
+// AQUI VEM UMA ALTERACAO
+
 GLfloat gCubeVertexData[216] = 
 {
     // Data layout for each line below is:
