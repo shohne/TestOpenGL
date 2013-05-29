@@ -396,13 +396,6 @@ GLfloat colors[144] = {
         glDisableClientState(GL_VERTEX_ARRAY);
 
     }
-    
-/*
-    glUniformMatrix4fv(uniforms[UNIFORM_MODELVIEWPROJECTION_MATRIX], 1, 0, _modelViewProjectionMatrix2.m);
-    glUniformMatrix3fv(uniforms[UNIFORM_NORMAL_MATRIX], 1, 0, _normalMatrix.m);
-    
-    glDrawArrays(GL_TRIANGLES, 0, 36);
- */
 }
 
 #pragma mark -  OpenGL ES 2 shader compilation
